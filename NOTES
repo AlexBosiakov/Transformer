@@ -1,0 +1,67 @@
+Dataset
+
+General statistics of the training corpus (train_split.csv)
+Title + Description
+
+Text length in words
+Average length: 37.85 words
+90th percentile (p90): 48 words
+99th percentile (p99): 70 words
+
+Vocabulary statistics
+Unique words: 47284
+Rare words (frequency = 1): 33.59%
+
+Tokenizer conclusions
+19k → sequences become longer
+21k → higher UNK‑rate, sequence length barely decreases
+Optimal vocab_size = 20000
+
+Choosing max sequence length
+p99 after SentencePiece = 109 tokens
+max_len = 256 fully covers the corpus
+Tokenization algorithm Byte Pair Encoding
+
+Dataset class
+Receives a dataframe, the SentencePiece tokenizer, and max_len
+Concatenates Title and Description into a single text
+Tokenizes the text using SPMTokenizer with fixed‑length output
+Converts class labels to zero‑based indexing
+Returns a dictionary with input_ids tensor and labels tensor
+
+Overall model architecture:
+- token and positional embeddings
+- a stack of N identical encoder blocks
+- normalization
+- classifier
+
+The attention block is implemented manually:
+- linear projections of the input into Q, K, V matrices of size d_model
+- splitting into num_heads heads: shape changes from (batch, seq_len, d_model) to (batch, heads, seq_len, head_dim)
+- computing the attention score matrix
+- applying the attention mask so the model ignores PAD tokens
+- softmax along the last dimension
+- weighted sum of Value vectors
+- concatenation of heads and a final linear projection
+
+Feed‑Forward Network
+- the first layer expands the dimensionality: d_model → hidden_dim
+- ReLU
+- the second layer reduces the dimensionality back: hidden_dim → d_model
+FFN strengthens local features of each token
+
+Encoder Block
+Uses a pre‑norm scheme, which ensures stable training
+- LayerNorm before attention
+- Multi‑Head Self‑Attention
+- Residual connection
+- LayerNorm before FFN
+- Feed‑Forward Network
+- Residual connection
+- Attention Mask
+
+To ensure correct attention behavior, a binary mask is created:
+1 — real token
+0 — PAD
+The mask is expanded to the shape (batch, 1, 1, seq_len) and passed into every attention block
+This prevents padding tokens from influencing attention computation

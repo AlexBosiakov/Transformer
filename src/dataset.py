@@ -18,7 +18,11 @@ class NewsDatasetSPM(Dataset):
 
         input_ids = self.tokenizer.encode(text, max_len=self.max_len)
 
+        # создаём attention mask: 1 — токен, 0 — PAD
+        mask = [1 if token_id != 0 else 0 for token_id in input_ids]
+
         return {
             "input_ids": torch.tensor(input_ids, dtype=torch.long),
+            "mask": torch.tensor(mask, dtype=torch.long),
             "labels": torch.tensor(label, dtype=torch.long)
         }
