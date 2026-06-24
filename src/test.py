@@ -10,24 +10,33 @@ def test_model(
     model_path,
     test_df,
     tokenizer,
-    batch_size=32,
-    max_len=256,
-    device="cuda"
+    *,
+    batch_size,
+    max_len,
+    device,
+    d_model,
+    num_heads,
+    ff_hidden_dim,
+    num_layers,
+    num_classes
 ):
 
+    # создаём тестовый датасет
     test_dataset = NewsDatasetSPM(test_df, tokenizer, max_len=max_len)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
+    # создаём модель с переданными параметрами
     model = TransformerEncoder(
         vocab_size=tokenizer.vocab_size(),
-        d_model=256,
+        d_model=d_model,
         max_len=max_len,
-        num_heads=12,
-        ff_hidden_dim=512,
-        num_layers=4,
-        num_classes=8
+        num_heads=num_heads,
+        ff_hidden_dim=ff_hidden_dim,
+        num_layers=num_layers,
+        num_classes=num_classes
     )
 
+    # загружаем веса
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
@@ -52,7 +61,7 @@ def test_model(
     acc = accuracy_score(labels_all, preds_all)
     f1 = f1_score(labels_all, preds_all, average="macro")
 
-    print("=== TEST RESULTS ===")
+    print("TEST RESULTS")
     print(f"Accuracy:   {acc:.4f}")
     print(f"F1-macro:   {f1:.4f}")
 
