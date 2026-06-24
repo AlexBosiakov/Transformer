@@ -1,0 +1,19 @@
+Transformer Text Classification
+Проект реализует полный пайплайн для классификации новостей с нуля на основе собственного Transformer‑энкодера и токенизатора SentencePiece.
+
+Содержимое проекта
+model.py — реализация TransformerEncoder
+dataset.py — датасет NewsDatasetSPM для подготовки данных
+train.py — обучение модели, логирование, сохранение чекпоинтов
+test.py — тестирование обученной модели на тестовом наборе
+tokenizer.model — обученный SentencePiece токенизатор
+utils.py — вспомогательные функции
+
+Возможности
+Кастомная архитектура Transformer
+SentencePiece токенизация
+Attention mask
+Обучение с валидацией
+Логирование метрик в CSV
+Сохранение лучшей модели
+Тестирование (Accuracy, F1‑macro)
