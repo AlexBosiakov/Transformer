@@ -15,7 +15,8 @@ def train_model(
     batch_size=32,
     lr=1e-4,
     device="cuda",
-    model_name="experiment"
+    model_name="experiment",
+    dropout=0.1
 ):
     model.to(device)
 
@@ -24,7 +25,15 @@ def train_model(
 
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["model_name", "epoch", "train_loss", "val_loss", "val_acc", "val_f1"])
+        writer.writerow([
+            "model_name",
+            "epoch",
+            "dropout",
+            "train_loss",
+            "val_loss",
+            "val_acc",
+            "val_f1"
+        ])
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
@@ -34,6 +43,8 @@ def train_model(
 
     best_val_acc = 0.0
     os.makedirs("checkpoints", exist_ok=True)
+
+    print(f"Training model '{model_name}' with dropout={dropout}")
 
     for epoch in range(epochs):
         model.train()
@@ -106,6 +117,7 @@ def train_model(
             writer.writerow([
                 model_name,
                 epoch + 1,
+                dropout,
                 total_loss / len(train_loader),
                 val_loss / len(val_loader),
                 val_acc,
@@ -115,7 +127,8 @@ def train_model(
         print(f"\nEpoch {epoch+1} finished:")
         print(f"Train loss: {total_loss/len(train_loader):.4f}, Train acc: {correct/total:.4f}")
         print(f"Val loss:   {val_loss/len(val_loader):.4f}, Val acc:   {val_acc:.4f}")
-        print(f"Val F1-macro: {val_f1_macro:.4f}\n")
+        print(f"Val F1-macro: {val_f1_macro:.4f}")
+        print(f"Dropout: {dropout}\n")
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc

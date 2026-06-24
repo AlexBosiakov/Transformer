@@ -1,6 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, f1_score
+import csv
+import os
 
 from model import TransformerEncoder
 from dataset import NewsDatasetSPM
@@ -18,10 +20,10 @@ def test_model(
     num_heads,
     ff_hidden_dim,
     num_layers,
-    num_classes
+    num_classes,
+    dropout=0.1
 ):
 
-    # создаём тестовый датасет
     test_dataset = NewsDatasetSPM(test_df, tokenizer, max_len=max_len)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
@@ -33,10 +35,10 @@ def test_model(
         num_heads=num_heads,
         ff_hidden_dim=ff_hidden_dim,
         num_layers=num_layers,
-        num_classes=num_classes
+        num_classes=num_classes,
+        dropout=dropout
     )
 
-    # загружаем веса
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
@@ -64,5 +66,43 @@ def test_model(
     print("TEST RESULTS")
     print(f"Accuracy:   {acc:.4f}")
     print(f"F1-macro:   {f1:.4f}")
+    print(f"Dropout:    {dropout}")
+
+    os.makedirs("test_logs", exist_ok=True)
+    csv_path = "test_logs/test_results.csv"
+
+    file_exists = os.path.isfile(csv_path)
+
+    with open(csv_path, "a", newline="") as f:
+        writer = csv.writer(f)
+
+        if not file_exists:
+            writer.writerow([
+                "model_path",
+                "d_model",
+                "num_heads",
+                "ff_hidden_dim",
+                "num_layers",
+                "num_classes",
+                "batch_size",
+                "max_len",
+                "dropout",
+                "accuracy",
+                "f1_macro"
+            ])
+
+        writer.writerow([
+            model_path,
+            d_model,
+            num_heads,
+            ff_hidden_dim,
+            num_layers,
+            num_classes,
+            batch_size,
+            max_len,
+            dropout,
+            acc,
+            f1
+        ])
 
     return acc, f1

@@ -2,23 +2,24 @@ import torch
 import torch.nn as nn
 
 class TransformerEmbedding(nn.Module):
-    def __init__(self, vocab_size, d_model, max_len):
+    def __init__(self, vocab_size, d_model, max_len, dropout):
         super().__init__()
         # Превращает id в векторы размерности d_model
         self.token_emb = nn.Embedding(vocab_size, d_model)
         # Позиционные эмбеддинги, каждая позиция свой вектор
         self.pos_emb = nn.Embedding(max_len, d_model)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, input_ids):
         batch_size, seq_len = input_ids.size()# Размер батча и длина последоватеьности в токенах
         positions = torch.arange(seq_len, device=input_ids.device).unsqueeze(0)
         # Сложение токенных и позиционных эмбеддингов
         x = self.token_emb(input_ids) + self.pos_emb(positions)
-        return x # Получаем готовые эмбеддинги: (batch_size, seq_len, d_model)
+        return self.dropout(x) # Получаем готовые эмбеддинги: (batch_size, seq_len, d_model)
 
 
 class MultiHeadSelfAttention(nn.Module):
-    def __init__(self, d_model, num_heads):
+    def __init__(self, d_model, num_heads, dropout):
         super().__init__()
         # Проверка: размер эмбеддинга поделится поровну между всеми головами внимания
         assert d_model % num_heads == 0
@@ -33,6 +34,7 @@ class MultiHeadSelfAttention(nn.Module):
 
         # Линейная проекция для объединения всех голов
         self.out_proj = nn.Linear(d_model, d_model)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, mask=None):
         batch, seq_len, d_model = x.size()
@@ -58,6 +60,8 @@ class MultiHeadSelfAttention(nn.Module):
         # От оценок получаем распределение вероятностей
         attn = scores.softmax(dim=-1)
 
+        attn = self.dropout(attn)
+
         # Превращаем внимание в новое представление токенов (batch, heads, seq_len, head_dim)
         # Берем взвешенную сумму всех Value, где веса это вероятности внимания
         out = attn @ V
@@ -75,38 +79,43 @@ class MultiHeadSelfAttention(nn.Module):
 # FFN отвечает за локальную обработку информации внутри каждого токена
 
 class FeedForward(nn.Module):
-    def __init__(self, d_model, hidden_dim):
+    def __init__(self, d_model, hidden_dim, dropout):
         super().__init__()
         self.fc1 = nn.Linear(d_model, hidden_dim) # расширение
         self.fc2 = nn.Linear(hidden_dim, d_model) # сужение
         self.act = nn.ReLU()
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        return self.fc2(self.act(self.fc1(x)))
+        return self.fc2(self.dropout(self.act(self.fc1(x))))
+
 
 class EncoderBlock(nn.Module):
-    def __init__(self, d_model, num_heads, ff_hidden_dim):
+    def __init__(self, d_model, num_heads, ff_hidden_dim, dropout):
         super().__init__()
-        self.attn = MultiHeadSelfAttention(d_model, num_heads)
+        self.attn = MultiHeadSelfAttention(d_model, num_heads, dropout)
         self.norm1 = nn.LayerNorm(d_model)
 
-        self.ff = FeedForward(d_model, ff_hidden_dim)
+        self.ff = FeedForward(d_model, ff_hidden_dim, dropout)
         self.norm2 = nn.LayerNorm(d_model)
+
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, mask=None):
         # Residual connection
-        x = x + self.attn(self.norm1(x), mask)
-        x = x + self.ff(self.norm2(x))
+        x = x + self.dropout(self.attn(self.norm1(x), mask))
+        x = x + self.dropout(self.ff(self.norm2(x)))
         return x
 
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, vocab_size, d_model, max_len, num_heads, ff_hidden_dim, num_layers, num_classes):
+    def __init__(self, vocab_size, d_model, max_len, num_heads, ff_hidden_dim, num_layers, num_classes, dropout):
         super().__init__()
-        self.embedding = TransformerEmbedding(vocab_size, d_model, max_len)
+
+        self.embedding = TransformerEmbedding(vocab_size, d_model, max_len, dropout)
 
         self.layers = nn.ModuleList([
-            EncoderBlock(d_model, num_heads, ff_hidden_dim)
+            EncoderBlock(d_model, num_heads, ff_hidden_dim, dropout)
             for _ in range(num_layers)
         ])
 
