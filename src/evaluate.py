@@ -28,7 +28,6 @@ def test_model(
     test_dataset = NewsDatasetSPM(test_df, tokenizer, max_len=max_len)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
-    # создаём модель с переданными параметрами
     model = TransformerEncoder(
         vocab_size=tokenizer.vocab_size(),
         d_model=d_model,
@@ -40,7 +39,6 @@ def test_model(
         dropout=dropout
     )
 
-    # загружаем веса
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
@@ -71,10 +69,7 @@ def test_model(
     print(f"Dropout:      {dropout}")
     print(f"Weight decay: {weight_decay}")
 
-    # ЛОГИРОВАНИЕ
-    os.makedirs("test_logs", exist_ok=True)
-    csv_path = "test_logs/test_results.csv"
-
+    csv_path = "/kaggle/working/test_results.csv"
     file_exists = os.path.isfile(csv_path)
 
     with open(csv_path, "a", newline="") as f:

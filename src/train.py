@@ -21,8 +21,7 @@ def train_model(
 ):
     model.to(device)
 
-    os.makedirs("logs", exist_ok=True)
-    csv_path = f"logs/{model_name}.csv"
+    csv_path = f"/kaggle/working/{model_name}.csv"
 
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
@@ -44,7 +43,6 @@ def train_model(
     optimizer = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     best_val_acc = 0.0
-    os.makedirs("checkpoints", exist_ok=True)
 
     print(f"Training model '{model_name}' with dropout={dropout}, weight_decay={weight_decay}")
 
@@ -135,6 +133,6 @@ def train_model(
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            checkpoint_path = f"checkpoints/{model_name}_best.pt"
+            checkpoint_path = f"/kaggle/working/{model_name}_best.pt"
             torch.save(model.state_dict(), checkpoint_path)
             print(f"Saved new best model to {checkpoint_path}")
