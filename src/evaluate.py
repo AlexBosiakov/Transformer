@@ -21,7 +21,8 @@ def test_model(
     ff_hidden_dim,
     num_layers,
     num_classes,
-    dropout=0.1
+    dropout=0.1,
+    weight_decay=0.01
 ):
 
     test_dataset = NewsDatasetSPM(test_df, tokenizer, max_len=max_len)
@@ -39,6 +40,7 @@ def test_model(
         dropout=dropout
     )
 
+    # загружаем веса
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
@@ -64,10 +66,12 @@ def test_model(
     f1 = f1_score(labels_all, preds_all, average="macro")
 
     print("TEST RESULTS")
-    print(f"Accuracy:   {acc:.4f}")
-    print(f"F1-macro:   {f1:.4f}")
-    print(f"Dropout:    {dropout}")
+    print(f"Accuracy:     {acc:.4f}")
+    print(f"F1-macro:     {f1:.4f}")
+    print(f"Dropout:      {dropout}")
+    print(f"Weight decay: {weight_decay}")
 
+    # ЛОГИРОВАНИЕ
     os.makedirs("test_logs", exist_ok=True)
     csv_path = "test_logs/test_results.csv"
 
@@ -87,6 +91,7 @@ def test_model(
                 "batch_size",
                 "max_len",
                 "dropout",
+                "weight_decay",
                 "accuracy",
                 "f1_macro"
             ])
@@ -101,6 +106,7 @@ def test_model(
             batch_size,
             max_len,
             dropout,
+            weight_decay,
             acc,
             f1
         ])

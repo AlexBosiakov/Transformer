@@ -16,7 +16,8 @@ def train_model(
     lr=1e-4,
     device="cuda",
     model_name="experiment",
-    dropout=0.1
+    dropout=0.1,
+    weight_decay=0.01
 ):
     model.to(device)
 
@@ -29,6 +30,7 @@ def train_model(
             "model_name",
             "epoch",
             "dropout",
+            "weight_decay",
             "train_loss",
             "val_loss",
             "val_acc",
@@ -39,12 +41,12 @@ def train_model(
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = AdamW(model.parameters(), lr=lr, weight_decay=0.01)
+    optimizer = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     best_val_acc = 0.0
     os.makedirs("checkpoints", exist_ok=True)
 
-    print(f"Training model '{model_name}' with dropout={dropout}")
+    print(f"Training model '{model_name}' with dropout={dropout}, weight_decay={weight_decay}")
 
     for epoch in range(epochs):
         model.train()
@@ -118,6 +120,7 @@ def train_model(
                 model_name,
                 epoch + 1,
                 dropout,
+                weight_decay,
                 total_loss / len(train_loader),
                 val_loss / len(val_loader),
                 val_acc,
@@ -128,7 +131,7 @@ def train_model(
         print(f"Train loss: {total_loss/len(train_loader):.4f}, Train acc: {correct/total:.4f}")
         print(f"Val loss:   {val_loss/len(val_loader):.4f}, Val acc:   {val_acc:.4f}")
         print(f"Val F1-macro: {val_f1_macro:.4f}")
-        print(f"Dropout: {dropout}\n")
+        print(f"Dropout: {dropout}, Weight decay: {weight_decay}\n")
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
