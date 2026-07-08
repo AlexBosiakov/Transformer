@@ -5,7 +5,7 @@ from tqdm import tqdm
 from sklearn.metrics import f1_score
 import csv
 import os
-
+import optuna
 
 def train_model(
     model,
@@ -17,7 +17,8 @@ def train_model(
     device="cuda",
     model_name="experiment",
     dropout=0.1,
-    weight_decay=0.01
+    weight_decay=0.01,
+    trial=None
 ):
     model.to(device)
 
@@ -125,6 +126,11 @@ def train_model(
                 val_f1_macro
             ])
 
+        if trial is not None:
+            trial.report(val_acc, epoch)
+            if trial.should_prune():
+                print(f"Trial pruned at epoch {epoch + 1}")
+                raise optuna.TrialPruned()
         print(f"\nEpoch {epoch+1} finished:")
         print(f"Train loss: {total_loss/len(train_loader):.4f}, Train acc: {correct/total:.4f}")
         print(f"Val loss:   {val_loss/len(val_loader):.4f}, Val acc:   {val_acc:.4f}")
@@ -136,3 +142,5 @@ def train_model(
             checkpoint_path = f"/kaggle/working/{model_name}_best.pt"
             torch.save(model.state_dict(), checkpoint_path)
             print(f"Saved new best model to {checkpoint_path}")
+
+    return best_val_acc
