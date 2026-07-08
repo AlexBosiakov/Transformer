@@ -1,4 +1,4 @@
-import optuna
+import Optuna1
 from model import TransformerEncoder
 import sentencepiece as spm
 from train import train_model
