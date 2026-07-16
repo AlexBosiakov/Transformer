@@ -1,19 +1,34 @@
-Transformer Text Classification
-Проект реализует полный пайплайн для классификации новостей с нуля на основе собственного Transformer‑энкодера и токенизатора SentencePiece.
+This project implements a custom TransformerEncoder from scratch using PyTorch and applies it to 
+the AG News topic classification task (4 classes: World, Sports, Business, Sci/Tech). 
+The goal was to explore the effect of different hyperparameters on model performance and 
+to find an optimal configuration using both manual tuning and automated search with Optuna.
 
-Содержимое проекта
-model.py — реализация TransformerEncoder
-dataset.py — датасет NewsDatasetSPM для подготовки данных
-train.py — обучение модели, логирование, сохранение чекпоинтов
-test.py — тестирование обученной модели на тестовом наборе
-tokenizer.model — обученный SentencePiece токенизатор
-utils.py — вспомогательные функции
+Project Structure
 
-Возможности
-Кастомная архитектура Transformer
-SentencePiece токенизация
-Attention mask
-Обучение с валидацией
-Логирование метрик в CSV
-Сохранение лучшей модели
-Тестирование (Accuracy, F1‑macro)
+model.py — custom implementation of TransformerEncoder: MultiHeadSelfAttention, FeedForward, 
+    EncoderBlock, positional embeddings, and pre‑LayerNorm, all built from scratch with PyTorch
+
+dataset.py — `NewsDatasetSPM` class that handles tokenization, padding, 
+    attention mask generation, and dataset preparation for training/evaluation
+
+train.py — training loop with logging of train/val metrics (loss, accuracy, F1‑macro) 
+    to CSV, checkpoint saving, and support for Optuna pruning
+
+evaluate.py — evaluation of a trained model on the test set, 
+    computing accuracy and F1‑macro, and appending results to a CSV file
+
+tokenizer.model — pre‑trained SentencePiece tokenizer (BPE, vocab size 20000) 
+
+optuna.py — automated hyperparameter search using Optuna: defines the `objective` function with the search space 
+    (`d_model`, `head_dim`, `ff_hidden_dim`, `num_layers`, `dropout`, `lr`, `weight_decay`), handles divisibility constraints, 
+    and runs 15 trials with pruning to find the best configuration.
+
+Experiment Results
+After extensive manual tuning and automated optimisation with Optuna, the best model achieved:
+- **Test Accuracy**: 0.9270
+- **F1‑macro**: 0.9268
+This result outperforms other custom Transformer implementations (91.7%) and 
+DistilBERT baselines (~90.4%), and comes within ~2% of fully fine‑tuned BERT (94.5%) – a strong 
+outcome for a from‑scratch implementation without large‑scale pre‑training. 
+The best configuration (found by Optuna) uses `d_model=192`, `num_heads=6`, `ff_hidden_dim=768`, `num_layers=5`, `dropout=0.3`, `weight_decay≈0.0125`,
+and `learning_rate≈2.90e-4`.
