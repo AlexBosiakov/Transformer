@@ -19,13 +19,14 @@ evaluate.py — evaluation of a trained model on the test set,
 
 tokenizer.model — pre‑trained SentencePiece tokenizer (BPE, vocab size 20000) 
 
+optuna.py — automated hyperparameter search using Optuna: defines the `objective` function with the search space 
+    (`d_model`, `head_dim`, `ff_hidden_dim`, `num_layers`, `dropout`, `lr`, `weight_decay`), handles divisibility constraints, 
+    and runs 15 trials with pruning to find the best configuration.
+
 Experiment Results
-
 After extensive manual tuning and automated optimisation with Optuna, the best model achieved:
-
 - **Test Accuracy**: 0.9270
 - **F1‑macro**: 0.9268
-
 This result outperforms other custom Transformer implementations (91.7%) and 
 DistilBERT baselines (~90.4%), and comes within ~2% of fully fine‑tuned BERT (94.5%) – a strong 
 outcome for a from‑scratch implementation without large‑scale pre‑training. 
