@@ -69,7 +69,12 @@ def test_model(
     print(f"Dropout:      {dropout}")
     print(f"Weight decay: {weight_decay}")
 
-    csv_path = "/kaggle/working/test_results.csv"
+    if os.path.exists("/kaggle/working"):
+        output_dir = "/kaggle/working"
+    else:
+        output_dir = "."
+    os.makedirs(output_dir, exist_ok=True)
+    csv_path = os.path.join(output_dir, "test_results.csv")
     file_exists = os.path.isfile(csv_path)
 
     with open(csv_path, "a", newline="") as f:

@@ -1,4 +1,4 @@
-import Optuna1
+import optuna
 from model import TransformerEncoder
 import sentencepiece as spm
 from train import train_model
@@ -8,6 +8,10 @@ def objective(trial):
     # 1. Предлагаем гиперпараметры
     d_model = trial.suggest_int("d_model", 128, 512, step=64)
     head_dim = trial.suggest_int("head_dim", 32, 64, step=16)
+
+    if d_model % head_dim != 0:
+        raise optuna.TrialPruned()  # отбрасываем неподходящий trial
+
     num_heads = d_model // head_dim
     if num_heads < 2 or num_heads > 16:
         raise optuna.TrialPruned()
