@@ -33,7 +33,7 @@ def train_model(
 ):
     training_args = TrainingArguments(
         output_dir=output_dir,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         num_train_epochs=epochs,
         per_device_train_batch_size=batch_size,
