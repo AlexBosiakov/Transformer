@@ -43,7 +43,7 @@ def train_model(
         weight_decay=weight_decay,
         load_best_model_at_end=True,
         metric_for_best_model="accuracy",
-        report_to=None,
+        report_to=[],
         save_total_limit=2,
         logging_dir="./logs",
     )
