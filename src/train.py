@@ -5,7 +5,7 @@ from tqdm import tqdm
 from sklearn.metrics import f1_score
 import csv
 import os
-import Optuna1
+import optuna
 
 def train_model(
     model,

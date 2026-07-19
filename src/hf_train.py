@@ -15,10 +15,10 @@ class CustomTrainer(Trainer):
         super().__init__(**kwargs)
         self.strategy = strategy
 
-    def training_step(self, model, inputs):
+    def training_step(self, model, inputs, num_items_in_batch=None):
         if self.strategy and self.state.epoch is not None:
             self.strategy.apply(model, int(self.state.epoch), self.args.num_train_epochs)
-        return super().training_step(model, inputs)
+        return super().training_step(model, inputs, num_items_in_batch)
 
 def train_model(
     model,
