@@ -1,5 +1,6 @@
 from transformers import Trainer, TrainingArguments
 from sklearn.metrics import accuracy_score, f1_score
+import os
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
