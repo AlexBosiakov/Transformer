@@ -1,14 +1,13 @@
+import os
 from transformers import Trainer, TrainingArguments
 from sklearn.metrics import accuracy_score, f1_score
-import os
+
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     preds = logits.argmax(axis=-1)
-    return {
-        "accuracy": accuracy_score(labels, preds),
-        "f1_macro": f1_score(labels, preds, average="macro")
-    }
+    return {"accuracy": accuracy_score(labels, preds), "f1_macro": f1_score(labels, preds, average="macro")}
+
 
 class CustomTrainer(Trainer):
     def __init__(self, strategy=None, **kwargs):
@@ -20,17 +19,19 @@ class CustomTrainer(Trainer):
             self.strategy.apply(model, int(self.state.epoch), self.args.num_train_epochs)
         return super().training_step(model, inputs, num_items_in_batch)
 
+
 def train_model(
-    model,
-    strategy,
-    train_dataset,
-    val_dataset,
-    lr=2e-5,
-    weight_decay=0.01,
-    epochs=5,
-    batch_size=32,
-    output_dir="./hf_results",
-    model_name="distilbert"
+        model,
+        strategy,
+        strategy_name,  # ← добавлен строковый параметр
+        train_dataset,
+        val_dataset,
+        lr=2e-5,
+        weight_decay=0.01,
+        epochs=5,
+        batch_size=32,
+        output_dir="./hf_results",
+        model_name="distilbert"
 ):
     training_args = TrainingArguments(
         output_dir=output_dir,
@@ -57,7 +58,7 @@ def train_model(
     )
     trainer.train()
 
-    best_model_path = os.path.join(output_dir, f"best_{model_name}_{strategy}.pt")
+    best_model_path = os.path.join(output_dir, f"best_{model_name}_{strategy_name}.pt")
     trainer.save_model(best_model_path)
     print(f"Best model saved to {best_model_path}")
 

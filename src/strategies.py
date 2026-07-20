@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 
+def unwrap_model(model):
+    return model.module if hasattr(model, 'module') else model
+
 class FinetuningStrategy:
     def apply(self, model, epoch, total_epochs):
         raise NotImplementedError
@@ -14,7 +17,8 @@ class FrozenEncoderStrategy(FinetuningStrategy):
         self.applied = False
     def apply(self, model, epoch, total_epochs):
         if not self.applied:
-            for param in model.distilbert.parameters():
+            base = unwrap_model(model)
+            for param in base.distilbert.parameters():
                 param.requires_grad = False
             self.applied = True
 
@@ -25,9 +29,10 @@ class ExtraLayersStrategy(FinetuningStrategy):
         self.applied = False
     def apply(self, model, epoch, total_epochs):
         if not self.applied:
-            original = model.classifier
+            base = unwrap_model(model)
+            original = base.classifier
             num_labels = original.out_features
-            model.classifier = nn.Sequential(
+            base.classifier = nn.Sequential(
                 nn.Linear(768, self.hidden_dim),
                 nn.ReLU(),
                 nn.Dropout(self.dropout),
@@ -41,12 +46,13 @@ class GradualUnfreezeStrategy(FinetuningStrategy):
         self.freeze_epochs = freeze_epochs
         self.initialized = False
     def apply(self, model, epoch, total_epochs):
+        base = unwrap_model(model)
         if not self.initialized:
-            for param in model.distilbert.parameters():
+            for param in base.distilbert.parameters():
                 param.requires_grad = False
             self.initialized = True
         if epoch >= self.freeze_epochs:
             layers = min(epoch - self.freeze_epochs + 1, self.num_layers)
-            for i, layer in enumerate(model.distilbert.transformer.layer[-layers:]):
+            for i, layer in enumerate(base.distilbert.transformer.layer[-layers:]):
                 for param in layer.parameters():
                     param.requires_grad = True
