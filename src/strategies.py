@@ -27,17 +27,20 @@ class ExtraLayersStrategy(FinetuningStrategy):
         self.hidden_dim = hidden_dim
         self.dropout = dropout
         self.applied = False
+
     def apply(self, model, epoch, total_epochs):
         if not self.applied:
             base = unwrap_model(model)
             original = base.classifier
             num_labels = original.out_features
-            base.classifier = nn.Sequential(
+            device = next(base.parameters()).device  # получаем устройство модели
+            new_classifier = nn.Sequential(
                 nn.Linear(768, self.hidden_dim),
                 nn.ReLU(),
                 nn.Dropout(self.dropout),
                 nn.Linear(self.hidden_dim, num_labels)
-            )
+            ).to(device)  # переносим на то же устройство
+            base.classifier = new_classifier
             self.applied = True
 
 class GradualUnfreezeStrategy(FinetuningStrategy):
